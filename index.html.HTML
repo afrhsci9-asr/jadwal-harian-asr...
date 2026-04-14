@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jadwal Harian ASR</title>
+    
+    <!-- Google Fonts: Quicksand untuk kesan estetik dan soft -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome untuk Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Konfigurasi Tema Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Quicksand', 'sans-serif'],
+                    },
+                    colors: {
+                        pastel: {
+                            pink: '#FAD4D4',
+                            blue: '#D4E2FA',
+                            green: '#D4FADF',
+                            yellow: '#FAF3D4',
+                            purple: '#E2D4FA',
+                            bg: '#FDFCFB',
+                            text: '#4A4A4A'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles & Animations */
+        body {
+            background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .task-enter {
+            animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d4d4d4;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a3a3a3;
+        }
+
+        /* Checkbox styling */
+        .custom-checkbox {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border: 2px solid #a1c4fd;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .custom-checkbox:checked {
+            background-color: #a1c4fd;
+            border-color: #a1c4fd;
+        }
+        .custom-checkbox:checked::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+    </style>
+</head>
+<body class="text-pastel-text p-4 md:p-8 flex items-center justify-center font-sans antialiased">
+
+    <main class="w-full max-w-2xl glass-card rounded-3xl shadow-xl overflow-hidden flex flex-col h-[90vh]">
+        
+        <!-- Header Section -->
+        <header class="bg-white/60 p-6 md:p-8 border-b border-white/50 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-pastel-pink via-pastel-purple to-pastel-blue"></div>
+            <div class="flex justify-between items-center mb-2">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-500 to-blue-500">
+                        Halo, ASR! ✨
+                    </h1>
+                    <p id="greetingText" class="text-gray-500 mt-1 font-medium">Semoga harimu menyenangkan!</p>
+                </div>
+                <div class="text-right">
+                    <div id="currentDate" class="text-sm font-semibold text-gray-500">Tanggal</div>
+                    <div id="currentTime" class="text-2xl font-bold text-gray-700">Waktu</div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-6">
+                <div class="flex justify-between text-sm font-semibold text-gray-600 mb-2">
+                    <span>Progress Hari Ini</span>
+                    <span id="progressText">0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2.5">
+                    <div id="progressBar" class="bg-gradient-to-r from-pastel-purple to-pastel-blue h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Input Section -->
+        <section class="p-6 bg-white/40">
+            <form id="taskForm" class="flex flex-col md:flex-row gap-3">
+                <input type="time" id="taskTime" required class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pastel-purple bg-white/80 shadow-sm">
+                
+                <input type="text" id="taskInput" placeholder="Ketik kegiatan harianmu di sini..." required class="flex-1 px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pastel-purple bg-white/80 shadow-sm placeholder-gray-400">
+                
+                <select id="taskCategory" class="px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-pastel-purple bg-white/80 shadow-sm text-gray-600 cursor-pointer">
+                    <option value="Rutinitas">🔄 Rutinitas</option>
+                    <option value="Hobi">🎨 Hobi</option>
+                    <option value="Belajar/Kerja">💻 Kerja/Belajar</option>
+                    <option value="Lainnya">📌 Lainnya</option>
+                </select>
+
+                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-pastel-purple to-pastel-blue text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:opacity-90 transition-all transform hover:scale-105 active:scale-95">
+                    <i class="fas fa-plus mr-1"></i> Tambah
+                </button>
+            </form>
+
+            <!-- Filters -->
+            <div class="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
+                <button onclick="filterTasks('Semua')" class="filter-btn active px-4 py-1.5 rounded-full text-sm font-semibold bg-gray-800 text-white shadow-sm transition-colors">Semua</button>
+                <button onclick="filterTasks('Rutinitas')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-semibold bg-white text-gray-600 hover:bg-gray-100 shadow-sm transition-colors">🔄 Rutinitas</button>
+                <button onclick="filterTasks('Hobi')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-semibold bg-white text-gray-600 hover:bg-gray-100 shadow-sm transition-colors">🎨 Hobi</button>
+                <button onclick="filterTasks('Belajar/Kerja')" class="filter-btn px-4 py-1.5 rounded-full text-sm font-semibold bg-white text-gray-600 hover:bg-gray-100 shadow-sm transition-colors">💻 Kerja/Belajar</button>
+            </div>
+        </section>
+
+        <!-- Task List Section -->
+        <section class="flex-1 overflow-y-auto p-6 bg-transparent">
+            <div id="emptyState" class="hidden flex-col items-center justify-center h-full text-center text-gray-400">
+                <i class="fas fa-box-open text-6xl mb-4 text-pastel-purple/50"></i>
+                <p class="text-lg font-medium text-gray-500">Belum ada jadwal tersimpan.</p>
+                <p class="text-sm">Yuk tambahkan rutinitas atau hobimu hari ini!</p>
+            </div>
+            <ul id="taskList" class="space-y-3">
+                <!-- Tasks will be injected here via JS -->
+            </ul>
+        </section>
+    </main>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // State
+        let tasks = JSON.parse(localStorage.getItem('asr_jadwal')) || [];
+        let currentFilter = 'Semua';
+
+        // DOM Elements
+        const taskForm = document.getElementById('taskForm');
+        const taskTime = document.getElementById('taskTime');
+        const taskInput = document.getElementById('taskInput');
+        const taskCategory = document.getElementById('taskCategory');
+        const taskList = document.getElementById('taskList');
+        const emptyState = document.getElementById('emptyState');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+
+        // Initialize App
+        function init() {
+            updateClock();
+            setInterval(updateClock, 1000);
+            setGreeting();
+            renderTasks();
+            
+            // Set default time to current time
+            const now = new Date();
+            taskTime.value = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        }
+
+        // Live Clock & Date
+        function updateClock() {
+            const now = new Date();
+            const timeOpts = { hour: '2-digit', minute: '2-digit' };
+            const dateOpts = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+            
+            document.getElementById('currentTime').textContent = now.toLocaleTimeString('id-ID', timeOpts);
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('id-ID', dateOpts);
+        }
+
+        // Dynamic Greeting based on time
+        function setGreeting() {
+            const hour = new Date().getHours();
+            let greet = "Semoga harimu menyenangkan!";
+            if(hour < 11) greet = "Selamat Pagi! Semangat memulai hari! 🌅";
+            else if(hour < 15) greet = "Selamat Siang! Jangan lupa istirahat ya! ☀️";
+            else if(hour < 18) greet = "Selamat Sore! Tetap semangat! ☕";
+            else greet = "Selamat Malam! Waktunya bersantai dan produktif ria! 🌙";
+            
+            document.getElementById('greetingText').textContent = greet;
+        }
+
+        // Add Task
+        taskForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const newTask = {
+                id: Date.now().toString(),
+                time: taskTime.value,
+                text: taskInput.value.trim(),
+                category: taskCategory.value,
+                completed: false
+            };
+
+            tasks.push(newTask);
+            saveData();
+            renderTasks();
+            
+            taskInput.value = ''; // Reset input
+            taskInput.focus();
+        });
+
+        // Toggle Status
+        function toggleTask(id) {
+            tasks = tasks.map(task => 
+                task.id === id ? { ...task, completed: !task.completed } : task
+            );
+            saveData();
+            renderTasks();
+        }
+
+        // Delete Task
+        function deleteTask(id) {
+            tasks = tasks.filter(task => task.id !== id);
+            saveData();
+            renderTasks();
+        }
+
+        // Filter Logic
+        function filterTasks(category) {
+            currentFilter = category;
+            
+            // Update button styles
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if(btn.textContent.includes(category)) {
+                    btn.classList.add('bg-gray-800', 'text-white');
+                    btn.classList.remove('bg-white', 'text-gray-600', 'hover:bg-gray-100');
+                } else {
+                    btn.classList.remove('bg-gray-800', 'text-white');
+                    btn.classList.add('bg-white', 'text-gray-600', 'hover:bg-gray-100');
+                }
+            });
+            
+            renderTasks();
+        }
+
+        // Category Color Mapping
+        function getCategoryColor(category) {
+            switch(category) {
+                case 'Rutinitas': return 'bg-pastel-blue text-blue-800 border-blue-200';
+                case 'Hobi': return 'bg-pastel-pink text-pink-800 border-pink-200';
+                case 'Belajar/Kerja': return 'bg-pastel-green text-green-800 border-green-200';
+                default: return 'bg-pastel-yellow text-yellow-800 border-yellow-200';
+            }
+        }
+
+        // Render Tasks to UI
+        function renderTasks() {
+            // Sort by time
+            let displayTasks = [...tasks].sort((a, b) => a.time.localeCompare(b.time));
+            
+            // Apply filter
+            if (currentFilter !== 'Semua') {
+                displayTasks = displayTasks.filter(task => task.category === currentFilter);
+            }
+
+            // Update UI
+            taskList.innerHTML = '';
+            
+            if (displayTasks.length === 0) {
+                emptyState.classList.remove('hidden');
+                emptyState.classList.add('flex');
+            } else {
+                emptyState.classList.add('hidden');
+                emptyState.classList.remove('flex');
+                
+                displayTasks.forEach(task => {
+                    const li = document.createElement('li');
+                    li.className = `task-enter flex items-center justify-between p-4 bg-white rounded-2xl shadow-sm border border-gray-100 transition-all hover:shadow-md ${task.completed ? 'opacity-70 bg-gray-50' : ''}`;
+                    
+                    const catColors = getCategoryColor(task.category);
+
+                    li.innerHTML = `
+                        <div class="flex items-center gap-4 flex-1">
+                            <input type="checkbox" class="custom-checkbox flex-shrink-0" ${task.completed ? 'checked' : ''} onclick="toggleTask('${task.id}')">
+                            
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <span class="text-xs font-bold px-2 py-1 rounded-md border ${catColors}">
+                                        ${task.category}
+                                    </span>
+                                    <span class="text-sm font-bold text-indigo-400 bg-indigo-50 px-2 py-1 rounded-md">
+                                        <i class="far fa-clock mr-1"></i>${task.time}
+                                    </span>
+                                </div>
+                                <p class="text-base font-semibold truncate ${task.completed ? 'line-through text-gray-400' : 'text-gray-700'}">
+                                    ${task.text}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <button onclick="deleteTask('${task.id}')" class="ml-4 w-8 h-8 rounded-full text-red-400 hover:bg-red-50 hover:text-red-600 transition-colors flex items-center justify-center focus:outline-none">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    `;
+                    taskList.appendChild(li);
+                });
+            }
+
+            updateProgress();
+        }
+
+        // Update Progress Bar
+        function updateProgress() {
+            if (tasks.length === 0) {
+                progressBar.style.width = '0%';
+                progressText.textContent = '0%';
+                return;
+            }
+            
+            const completed = tasks.filter(t => t.completed).length;
+            const percentage = Math.round((completed / tasks.length) * 100);
+            
+            progressBar.style.width = `${percentage}%`;
+            progressText.textContent = `${percentage}% (${completed}/${tasks.length} Selesai)`;
+            
+            if(percentage === 100) {
+                progressBar.classList.remove('from-pastel-purple', 'to-pastel-blue');
+                progressBar.classList.add('from-green-400', 'to-emerald-500');
+            } else {
+                progressBar.classList.add('from-pastel-purple', 'to-pastel-blue');
+                progressBar.classList.remove('from-green-400', 'to-emerald-500');
+            }
+        }
+
+        // Save to Local Storage
+        function saveData() {
+            localStorage.setItem('asr_jadwal', JSON.stringify(tasks));
+        }
+
+        // Run
+        init();
+    </script>
+</body>
+</html>
